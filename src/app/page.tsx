@@ -5,7 +5,7 @@ import HighPieChart from "@/components/HighPieChart";
 import TableChart from "@/components/TableChart";
 import { Lock, LockOpen } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createPublicClient, http, parseAbiItem } from 'viem';
+import { createPublicClient, http, parseAbiItem, parseEther } from 'viem';
 import { arbitrum } from 'viem/chains';
 
 const publicClient = createPublicClient({
@@ -85,6 +85,11 @@ export default function Home() {
     "0x49fcd47a8caf052c80ffc4db9ea24a83ecc69ce5": "Core team",
   }
   const foundingCommunity = "0x8386b1cb4611a136d6bec5b815aff295c4cac999"
+  const exchangeReserves: TransferLog = {
+    in: parseEther("50000000"),
+    out: parseEther("50000000"),
+    remaining: BigInt(0),
+  }
 
   useEffect(() => {
     fetchData();
@@ -96,7 +101,6 @@ export default function Home() {
     const transferLogs = await getTransferLogs(Object.keys(poolAddress).concat(vestingCommunityAddresses));
 
     const poolData = await getPoolData(transferLogs);
-    console.log(poolData);
     const poolDataWithColor = poolData.map((pool) => ({
       ...pool,
       color: pool.name === "Founding Community" ? "#E210E3" : pool.name === "Foundation Reservers" ? "#adb4c1" : pool.name === "Operation Fund" ? "#1C2ED3" : pool.name === "Airdrop Campaigns" ? "#A68DFF" : pool.name === "Community and Ecosystem" ? "#7543FF" : pool.name === "Core team" ? "#4AC8FF" : "#4646AF",
@@ -125,8 +129,6 @@ export default function Home() {
       fromBlock: BigInt(303167703),
     })
 
-    console.log(logs);
-
     const addressesInOutLogs = Object.fromEntries(addresses.map(address => [address, {in: BigInt(0), out: BigInt(0), remaining: BigInt(0)}]));
 
     logs.forEach((log) => {
@@ -139,28 +141,34 @@ export default function Home() {
         addressesInOutLogs[log.args.from.toLowerCase()].remaining = addressesInOutLogs[log.args.from.toLowerCase()].remaining - BigInt(log.args.value);
       }
     });
-    console.log(addressesInOutLogs);
     return addressesInOutLogs;
   }
 
   const getPoolData = async (transferLogs: TransferLogData) => {
     const totalRemaining = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.remaining;
-    }, BigInt(0));
+    }, exchangeReserves.remaining);
     const totalOut = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.out;
-    }, BigInt(0));
-
-    console.log(totalRemaining, totalOut);
+    },exchangeReserves.out);
+    const totalIn = Object.values(transferLogs).reduce((acc, log) => {
+      return acc + log.in;
+    }, exchangeReserves.in);
     const poolData: PoolData[] = [];
+    poolData.push({
+      name: "Liquidity and Exchange Reserves",
+      unlocked: totalOut > 0 ? Number(exchangeReserves.out * BigInt(10000) / totalIn)/100 : 0,
+      locked: totalRemaining > 0 ? Number(exchangeReserves.remaining * BigInt(10000) / totalIn)/100 : 0,
+    })
 
     Object.entries(poolAddress).forEach(([address, name]) => {
       poolData.push({
         name: name,
-        unlocked: totalOut > 0 ? Number(transferLogs[address].out * BigInt(10000) / totalOut)/100 : 0,
-        locked: totalRemaining > 0 ? Number(transferLogs[address].remaining * BigInt(10000) / totalRemaining)/100 : 0,
+        unlocked: totalOut > 0 ? Number(transferLogs[address].out * BigInt(10000) / totalIn)/100 : 0,
+        locked: totalRemaining > 0 ? Number(transferLogs[address].remaining * BigInt(10000) / totalIn)/100 : 0,
       })
     });
+
 
     const addressLeft = Object.keys(transferLogs).filter((address) => !Object.keys(poolAddress).includes(address));
 
@@ -172,12 +180,10 @@ export default function Home() {
       return acc + transferLogs[address].out;
     }, BigInt(0));
 
-    console.log(totalRemainingLeft, totalOutLeft);
-
     poolData.push({
       name: "Founding Community",
-      unlocked: totalOut > 0 ? Number(totalOutLeft * BigInt(10000) / totalOut)/100 : 0,
-      locked: totalRemaining > 0 ? Number(totalRemainingLeft * BigInt(10000) / totalRemaining)/100 : 0,
+      unlocked: totalOut > 0 ? Number(totalOutLeft * BigInt(10000) / totalIn)/100 : 0,
+      locked: totalRemaining > 0 ? Number(totalRemainingLeft * BigInt(10000) / totalIn)/100 : 0,
     })
     return poolData;
   }
