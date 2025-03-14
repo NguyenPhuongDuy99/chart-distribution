@@ -5,15 +5,13 @@ import HighPieChart from "@/components/HighPieChart";
 import TableChart from "@/components/TableChart";
 import { Lock, LockOpen } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createPublicClient, http, parseAbiItem } from "viem";
+import { createPublicClient, http, parseAbiItem, parseEther } from "viem";
 import { arbitrum } from "viem/chains";
 
 const publicClient = createPublicClient({
   chain: arbitrum,
   transport: http(),
 });
-
-console.log("publicClient", publicClient);
 
 interface TransferLog {
   in: bigint;
@@ -87,6 +85,11 @@ export default function Home() {
     "0x49fcd47a8caf052c80ffc4db9ea24a83ecc69ce5": "Core team",
   };
   const foundingCommunity = "0x8386b1cb4611a136d6bec5b815aff295c4cac999";
+  const exchangeReserves: TransferLog = {
+    in: parseEther("50000000"),
+    out: parseEther("50000000"),
+    remaining: BigInt(0),
+  };
 
   useEffect(() => {
     fetchData();
@@ -94,6 +97,7 @@ export default function Home() {
 
   const fetchData = async () => {
     const vestingCommunityAddresses = await getVestingCommunityAddresses();
+
     const transferLogs = await getTransferLogs(
       Object.keys(poolAddress).concat(vestingCommunityAddresses as string[])
     );
@@ -129,6 +133,7 @@ export default function Home() {
       args: {},
       fromBlock: BigInt(303167703),
     });
+
     return [
       foundingCommunity,
       ...redeemCreatedEvent.map((event) => event.args.redeem),
@@ -186,26 +191,38 @@ export default function Home() {
   const getPoolData = async (transferLogs: TransferLogData) => {
     const totalRemaining = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.remaining;
-    }, BigInt(0));
+    }, exchangeReserves.remaining);
     const totalOut = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.out;
-    }, BigInt(0));
-
+    }, exchangeReserves.out);
+    const totalIn = Object.values(transferLogs).reduce((acc, log) => {
+      return acc + log.in;
+    }, exchangeReserves.in);
     const poolData: PoolData[] = [];
+    poolData.push({
+      name: "Liquidity and Exchange Reserves",
+      unlocked:
+        totalOut > 0
+          ? Number((exchangeReserves.out * BigInt(10000)) / totalIn) / 100
+          : 0,
+      locked:
+        totalRemaining > 0
+          ? Number((exchangeReserves.remaining * BigInt(10000)) / totalIn) / 100
+          : 0,
+    });
 
     Object.entries(poolAddress).forEach(([address, name]) => {
       poolData.push({
         name: name,
         unlocked:
           totalOut > 0
-            ? Number((transferLogs[address].out * BigInt(10000)) / totalOut) /
+            ? Number((transferLogs[address].out * BigInt(10000)) / totalIn) /
               100
             : 0,
         locked:
           totalRemaining > 0
             ? Number(
-                (transferLogs[address].remaining * BigInt(10000)) /
-                  totalRemaining
+                (transferLogs[address].remaining * BigInt(10000)) / totalIn
               ) / 100
             : 0,
       });
@@ -227,11 +244,11 @@ export default function Home() {
       name: "Founding Community",
       unlocked:
         totalOut > 0
-          ? Number((totalOutLeft * BigInt(10000)) / totalOut) / 100
+          ? Number((totalOutLeft * BigInt(10000)) / totalIn) / 100
           : 0,
       locked:
         totalRemaining > 0
-          ? Number((totalRemainingLeft * BigInt(10000)) / totalRemaining) / 100
+          ? Number((totalRemainingLeft * BigInt(10000)) / totalIn) / 100
           : 0,
     });
     return poolData;
@@ -261,6 +278,7 @@ export default function Home() {
           <HighPieChart data={data} hoveredSegment={hoveredSegment} />
         </div>
       </div>
+      6:17 PM
     </div>
   );
 }
