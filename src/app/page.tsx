@@ -77,7 +77,7 @@ export default function Home() {
   ]);
 
   const poolAddress = {
-    "0x024bbbe12cf4fe894bfffea0647257aa1183597b": "Founding Community",
+    "0x024bbbe12cf4fe894bfffea0647257aa1183597b": "Strategic Partner",
     "0xb457d6f060ccd8f6510c776e414f905ed34cb28a": "Foundation Reservers",
     "0x3eab71b2b7c42b17e0666cbe6a943ad35aa395ec": "Operation Fund",
     "0xbb6652a8f32a147c3b0a8d0dd3b89b83fa85fca5": "Airdrop Campaigns",
