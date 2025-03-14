@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 interface TableChartProps {
   data: {
     name: string;
@@ -5,8 +7,9 @@ interface TableChartProps {
     locked: number;
     color: string;
   }[];
+  setHoveredSegment: Dispatch<SetStateAction<string | null>>;
 }
-const TableChart = ({ data }: TableChartProps) => {
+const TableChart = ({ data, setHoveredSegment }: TableChartProps) => {
   return (
     <div className="max-w-[609px] w-full">
       <table className="w-full border-collapse text-white">
@@ -23,6 +26,8 @@ const TableChart = ({ data }: TableChartProps) => {
             <tr
               key={index}
               className="border-b border-gray-700 last:border-none"
+              onMouseEnter={() => setHoveredSegment(row.name)}
+              onMouseLeave={() => setHoveredSegment(null)}
             >
               <td className="py-3 px-4 flex items-center">
                 <span
