@@ -4,8 +4,10 @@ import StackedBarChart from "@/components/BarChart";
 import HighPieChart from "@/components/HighPieChart";
 import TableChart from "@/components/TableChart";
 import { Lock, LockOpen } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
+  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
   const data = [
     { name: "Founding Community", unlocked: 0, locked: 32, color: "#E210E3" },
     {
@@ -67,8 +69,8 @@ export default function Home() {
           <Lock className="shrink-0" />
         </div>
         <div className="flex justify-between">
-          <TableChart data={data} />
-          <HighPieChart data={data} />
+          <TableChart data={data} setHoveredSegment={setHoveredSegment} />
+          <HighPieChart data={data} hoveredSegment={hoveredSegment} />
         </div>
       </div>
     </div>
