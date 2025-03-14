@@ -1,5 +1,6 @@
-import Highcharts, { Options } from "highcharts";
+import Highcharts, { Options, SeriesPieOptions } from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+
 interface HighNestedPieChartProps {
   data: {
     name: string;
@@ -7,12 +8,21 @@ interface HighNestedPieChartProps {
     locked: number;
     color: string;
   }[];
+  hoveredSegment: string | null;
 }
-const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
-  const chartData = data.map((item) => ({
+
+const HighNestedPieChart = ({
+  data,
+  hoveredSegment,
+}: HighNestedPieChartProps) => {
+  const chartData: SeriesPieOptions["data"] = data.map((item) => ({
     name: item.name,
-    y: item.unlocked + item.locked, // Hiển thị tổng
+    y: item.unlocked + item.locked,
     color: item.color,
+    opacity: hoveredSegment && hoveredSegment !== item.name ? 0.5 : 1, 
+    sliced: hoveredSegment === item.name, 
+     selected: hoveredSegment === item.name,
+     
   }));
 
   const chartOptions: Options = {
@@ -28,25 +38,22 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
     tooltip: {
       useHTML: true,
       formatter: function () {
-        const locked =
-          data.find((item) => item.name === this.name)?.locked || 0;
-        const unlocked =
-          data.find((item) => item.name === this.name)?.unlocked || 0;
+        const segment = data.find((item) => item.name === this.name);
         return `
           <div style="font-size: 13px; color: #333; font-weight: bold;">
             Allocation: <span style="color: #0073E6">${this.name}</span>
           </div>
           ${
-            locked > 0
+            segment?.locked
               ? `<div style="color: #707070; font-size: 12px;">
-            Locked: <b> ${locked}%</b>  for Supply
+            Locked: <b>${segment.locked}%</b> for Supply
           </div>`
               : ""
           }
           ${
-            unlocked > 0
-              ? ` <div style="color: #333; font-size: 12px;">
-            Unlocked: <b>${unlocked}%</b> for Supply
+            segment?.unlocked
+              ? `<div style="color: #333; font-size: 12px;">
+            Unlocked: <b>${segment.unlocked}%</b> for Supply
           </div>`
               : ""
           }
@@ -71,8 +78,8 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
           distance: -40,
         },
         states: {
-          inactive: {
-            opacity: 0.6,
+          hover: {
+            brightness: 0.1, // Làm sáng khi hover
           },
         },
       },
@@ -84,7 +91,6 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
         name: "Category",
         size: "100%",
         innerSize: "60%",
-
         dataLabels: {
           enabled: true,
           style: {
