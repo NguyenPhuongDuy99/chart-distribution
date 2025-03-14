@@ -106,7 +106,15 @@ export default function Home() {
   }
 
   const getVestingCommunityAddresses = async () => {
-    return [foundingCommunity];
+    const redeemCreatedEvent = await publicClient.getLogs({
+      address: foundingCommunity,
+      event: parseAbiItem('event RedeemInitialized(address redeem, address erc20, uint256 totalAmount, address[] beneficiaries, uint16[] allocations, uint64 durationSeconds, uint64 redeemRate)'),
+      args: {},
+      fromBlock: BigInt(303167703),
+    })
+    
+
+    return [foundingCommunity, ...redeemCreatedEvent.map((event) => event.args.redeem)];
   }
 
   const getTransferLogs = async (addresses: string[]): Promise<TransferLogData> => {
