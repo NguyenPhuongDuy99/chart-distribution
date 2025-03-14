@@ -80,8 +80,8 @@ const StackedBarChart = () => {
     <div className="w-full">
       <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       <div className="flex justify-between">
-        <p>BIC 50M</p>
-        <p>BIC 50M</p>
+        <p>BIC 2.80B ~ $39.78M</p>
+        <p>BIC 5.10B ~ $72.46M</p>
       </div>
     </div>
   );
