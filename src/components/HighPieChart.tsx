@@ -9,7 +9,6 @@ interface HighNestedPieChartProps {
   }[];
 }
 const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
-
   const chartData = data.map((item) => ({
     name: item.name,
     y: item.unlocked + item.locked, // Hiển thị tổng
@@ -27,7 +26,7 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
       style: { display: "none" },
     },
     tooltip: {
-      useHTML: true, // Cho phép HTML trong tooltip
+      useHTML: true,
       formatter: function () {
         const locked =
           data.find((item) => item.name === this.name)?.locked || 0;
@@ -45,10 +44,11 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
               : ""
           }
           ${
-            unlocked > 0 &&
-            ` <div style="color: #333; font-size: 12px;">
+            unlocked > 0
+              ? ` <div style="color: #333; font-size: 12px;">
             Unlocked: <b>${unlocked}%</b> for Supply
           </div>`
+              : ""
           }
           <div style="color: #000; font-size: 12px; font-weight: bold;">
             Total: <b>${this.y}%</b> for Supply
@@ -58,13 +58,7 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
     },
     plotOptions: {
       pie: {
-        shadow: {
-          color: "rgba(0, 0, 0, 0.1)",
-          offsetX: 2,
-          offsetY: 2,
-          opacity: 0.5,
-          width: 5,
-        },
+        borderColor: "transparent",
         dataLabels: {
           enabled: true,
           format: "<b>{point.y}%</b>",
@@ -74,7 +68,7 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
             textOutline: "none",
             color: "#fff",
           },
-          distance: -40, // Số nằm trên segment
+          distance: -40,
         },
         states: {
           inactive: {
@@ -89,8 +83,8 @@ const HighNestedPieChart = ({ data }: HighNestedPieChartProps) => {
         type: "pie",
         name: "Category",
         size: "100%",
-        borderWidth: 0,
         innerSize: "60%",
+
         dataLabels: {
           enabled: true,
           style: {

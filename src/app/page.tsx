@@ -7,22 +7,46 @@ import { Lock, LockOpen } from "lucide-react";
 
 export default function Home() {
   const data = [
-    { name: "Strategic Partner", unlocked: 25, locked: 15, color: "#E210E3" },
+    { name: "Founding Community", unlocked: 0, locked: 32, color: "#E210E3" },
     {
       name: "Core team",
-      unlocked: 2.5,
-      locked: 17.5,
+      unlocked: 0,
+      locked: 6,
       color: "#4AC8FF",
     },
-    { name: "Founding Community", unlocked: 4, locked: 11, color: "#A68DFF" },
-    { name: "Airdrop Campaigns", unlocked: 15, locked: 0, color: "#7543FF" },
+    { name: "Airdrop Campaigns", unlocked: 0, locked: 6, color: "#A68DFF" },
     {
       name: "Community and Ecosystem",
-      unlocked: 10,
-      locked: 0,
+      unlocked: 0,
+      locked: 8,
+      color: "#7543FF",
+    },
+    {
+      name: "Operation Fund",
+      unlocked: 0,
+      locked: 10,
       color: "#1C2ED3",
     },
+    {
+      name: "Liquidity and Exchange Reserves",
+      unlocked: 1,
+      locked: 0,
+      color: "#F087FF",
+    },
+    {
+      name: "Foundation Reservers",
+      unlocked: 0,
+      locked: 35,
+      color: "#adb4c1",
+    },
+    {
+      name: "Strategic Partner",
+      unlocked: 0,
+      locked: 2,
+      color: "#4646AF",
+    },
   ];
+
   return (
     <div className="px-2.5 text-white h-screen bg-[url(/img/background-img.webp)] bg-no-bg-no-repeat bg-cover bg-center">
       <div className="pt-[52px] max-w-[1200px] w-full mx-auto flex flex-col gap-5">
