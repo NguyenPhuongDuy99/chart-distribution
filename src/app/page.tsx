@@ -5,7 +5,7 @@ import HighPieChart from '@/components/HighPieChart';
 import TableChart from '@/components/TableChart';
 import { Lock, LockOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { createPublicClient, http, parseAbiItem, parseEther } from 'viem';
+import { createPublicClient, formatEther, http, parseAbiItem, parseEther } from 'viem';
 import { arbitrum } from 'viem/chains';
 
 const publicClient = createPublicClient({
@@ -75,6 +75,10 @@ export default function Home() {
     //   color: '#4646AF',
     // },
   ]);
+  const [totalLocked, setTotalLocked] = useState('0');
+  const [totalUnlocked, setTotalUnlocked] = useState('0');
+  const [lockedPercentage, setLockedPercentage] = useState(0);
+  const [unlockedPercentage, setUnlockedPercentage] = useState(0);
 
   const poolAddress = {
     '0x024bbbe12cf4fe894bfffea0647257aa1183597b': 'Strategic Partner',
@@ -104,8 +108,7 @@ export default function Home() {
         Object.keys(poolAddress).concat(vestingCommunityAddresses as string[])
       );
 
-      const poolData = await getPoolData(transferLogs);
-
+      const poolData = getPoolData(transferLogs);
       const poolDataWithColor = poolData.map(({ name, ...pool }) => ({
         ...pool,
         name,
@@ -195,16 +198,23 @@ export default function Home() {
     return addressesInOutLogs;
   };
 
-  const getPoolData = async (transferLogs: TransferLogData) => {
+  const getPoolData = (transferLogs: TransferLogData) => {
+    const transferLogsWithoutVestingFactory = Object.assign({}, transferLogs);
+    delete transferLogsWithoutVestingFactory[foundingCommunity];
     const totalRemaining = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.remaining;
     }, exchangeReserves.remaining);
-    const totalOut = Object.values(transferLogs).reduce((acc, log) => {
+    const totalOut = Object.values(transferLogsWithoutVestingFactory).reduce((acc, log) => {
       return acc + log.out;
     }, exchangeReserves.out);
     const totalIn = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.in;
     }, exchangeReserves.in);
+    setTotalLocked(formatEther(totalRemaining));
+    setTotalUnlocked(formatEther(totalOut));
+    const totalLockedTenThousandth = Number((totalRemaining * BigInt(10000)) / totalIn);
+    setLockedPercentage(totalLockedTenThousandth/100);
+    setUnlockedPercentage((10000 - totalLockedTenThousandth)/100);
     const poolData: PoolData[] = [];
     poolData.push({
       name: 'Liquidity and Exchange Reserves',
@@ -276,7 +286,7 @@ export default function Home() {
         </p>
         <div className="flex items-center gap-2">
           <LockOpen className="shrink-0" />
-          <StackedBarChart />
+          <StackedBarChart totalLocked={totalLocked} totalUnlocked={totalUnlocked} lockedPercentage={lockedPercentage} unlockedPercentage={unlockedPercentage} />
           <Lock className="shrink-0" />
         </div>
         <div className="flex justify-between">

@@ -1,10 +1,10 @@
 import Highcharts, { Options } from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
-const StackedBarChart = () => {
+const StackedBarChart = ({ totalLocked, totalUnlocked, lockedPercentage, unlockedPercentage }: { totalLocked: string, totalUnlocked: string, lockedPercentage: number, unlockedPercentage: number }) => {
   const chartOptions: Options = {
     chart: {
-      type: "bar",
+      type: "bar", 
       backgroundColor: "transparent",
       height: 90, // Điều chỉnh chiều cao phù hợp UI
     },
@@ -58,19 +58,19 @@ const StackedBarChart = () => {
       {
         type: "bar",
         name: "Unlocked",
-        data: [28],
+        data: [unlockedPercentage],
         color: "#A855F7", // Màu tím
       },
       {
         type: "bar",
         name: "Next Unlocked",
-        data: [21],
+        data: [0],
         color: "#2DD4BF", // Màu xanh
       },
       {
         type: "bar",
         name: "Locked",
-        data: [51],
+        data: [lockedPercentage],
         color: "#6B7280", // Màu xám
       },
     ],
@@ -80,8 +80,8 @@ const StackedBarChart = () => {
     <div className="w-full">
       <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       <div className="flex justify-between">
-        <p>BIC 2.80B ~ $39.78M</p>
-        <p>BIC 5.10B ~ $72.46M</p>
+        <p>BIC {totalLocked} ~ $39.78M</p>
+        <p>BIC {totalUnlocked} ~ $72.46M</p>
       </div>
     </div>
   );
