@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@beincom/web-ui": "^1.0.74",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "highcharts": "^12.1.2",

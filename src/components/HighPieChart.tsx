@@ -23,7 +23,6 @@ const HighNestedPieChart = ({
     sliced: hoveredSegment === item.name,
     selected: hoveredSegment === item.name,
   }));
-  console.log('chartData', chartData)
 
   const chartOptions: Options = {
     chart: {
