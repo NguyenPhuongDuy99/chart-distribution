@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from 'react';
 
 interface TableChartProps {
   data: {
@@ -40,10 +40,10 @@ const TableChart = ({ data, setHoveredSegment }: TableChartProps) => {
               </td>
               <td className="py-3 px-4">{row.unlocked + row.locked}%</td>
               <td className="py-3 px-4">
-                {row.unlocked ? `${row.unlocked}%` : "-"}
+                {row.unlocked ? `${row.unlocked}%` : '-'}
               </td>
               <td className="py-3 px-4">
-                {row.locked ? `${row.locked}%` : "-"}
+                {row.locked ? `${row.locked}%` : '-'}
               </td>
             </tr>
           ))}

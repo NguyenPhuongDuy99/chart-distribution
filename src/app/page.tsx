@@ -1,19 +1,17 @@
-"use client";
+'use client';
 
-import StackedBarChart from "@/components/BarChart";
-import HighPieChart from "@/components/HighPieChart";
-import TableChart from "@/components/TableChart";
-import { Lock, LockOpen } from "lucide-react";
-import { useState, useEffect } from "react";
-import { createPublicClient, http, parseAbiItem } from "viem";
-import { arbitrum } from "viem/chains";
+import StackedBarChart from '@/components/BarChart';
+import HighPieChart from '@/components/HighPieChart';
+import TableChart from '@/components/TableChart';
+import { Lock, LockOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { createPublicClient, formatEther, http, parseAbiItem, parseEther } from 'viem';
+import { arbitrum } from 'viem/chains';
 
 const publicClient = createPublicClient({
   chain: arbitrum,
   transport: http(),
 });
-
-console.log("publicClient", publicClient);
 
 interface TransferLog {
   in: bigint;
@@ -38,97 +36,114 @@ interface PoolDataWithColor extends PoolData {
 export default function Home() {
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
   const [data, setData] = useState<PoolDataWithColor[]>([
-    { name: "Founding Community", unlocked: 0, locked: 32, color: "#E210E3" },
-    {
-      name: "Core team",
-      unlocked: 0,
-      locked: 6,
-      color: "#4AC8FF",
-    },
-    { name: "Airdrop Campaigns", unlocked: 0, locked: 6, color: "#A68DFF" },
-    {
-      name: "Community and Ecosystem",
-      unlocked: 0,
-      locked: 8,
-      color: "#7543FF",
-    },
-    {
-      name: "Operation Fund",
-      unlocked: 0,
-      locked: 10,
-      color: "#1C2ED3",
-    },
-    {
-      name: "Liquidity and Exchange Reserves",
-      unlocked: 1,
-      locked: 0,
-      color: "#F087FF",
-    },
-    {
-      name: "Foundation Reservers",
-      unlocked: 0,
-      locked: 35,
-      color: "#adb4c1",
-    },
-    {
-      name: "Strategic Partner",
-      unlocked: 0,
-      locked: 2,
-      color: "#4646AF",
-    },
+    // { name: 'Founding Community', unlocked: 0, locked: 32, color: '#E210E3' },
+    // {
+    //   name: 'Core team',
+    //   unlocked: 0,
+    //   locked: 6,
+    //   color: '#4AC8FF',
+    // },
+    // { name: 'Airdrop Campaigns', unlocked: 0, locked: 6, color: '#A68DFF' },
+    // {
+    //   name: 'Community and Ecosystem',
+    //   unlocked: 0,
+    //   locked: 8,
+    //   color: '#7543FF',
+    // },
+    // {
+    //   name: 'Operation Fund',
+    //   unlocked: 0,
+    //   locked: 10,
+    //   color: '#1C2ED3',
+    // },
+    // {
+    //   name: 'Liquidity and Exchange Reserves',
+    //   unlocked: 1,
+    //   locked: 0,
+    //   color: '#F087FF',
+    // },
+    // {
+    //   name: 'Foundation Reservers',
+    //   unlocked: 0,
+    //   locked: 35,
+    //   color: '#adb4c1',
+    // },
+    // {
+    //   name: 'Strategic Partner',
+    //   unlocked: 0,
+    //   locked: 2,
+    //   color: '#4646AF',
+    // },
   ]);
+  const [totalLocked, setTotalLocked] = useState('0');
+  const [totalUnlocked, setTotalUnlocked] = useState('0');
+  const [lockedPercentage, setLockedPercentage] = useState(0);
+  const [unlockedPercentage, setUnlockedPercentage] = useState(0);
 
   const poolAddress = {
-    "0x024bbbe12cf4fe894bfffea0647257aa1183597b": "Strategic Partner",
-    "0xb457d6f060ccd8f6510c776e414f905ed34cb28a": "Foundation Reservers",
-    "0x3eab71b2b7c42b17e0666cbe6a943ad35aa395ec": "Operation Fund",
-    "0xbb6652a8f32a147c3b0a8d0dd3b89b83fa85fca5": "Airdrop Campaigns",
-    "0x197f5d9110315544d057b1a463723363769bf01a": "Community and Ecosystem",
-    "0x49fcd47a8caf052c80ffc4db9ea24a83ecc69ce5": "Core team",
+    '0x024bbbe12cf4fe894bfffea0647257aa1183597b': 'Strategic Partner',
+    '0xb457d6f060ccd8f6510c776e414f905ed34cb28a': 'Foundation Reservers',
+    '0x3eab71b2b7c42b17e0666cbe6a943ad35aa395ec': 'Operation Fund',
+    '0xbb6652a8f32a147c3b0a8d0dd3b89b83fa85fca5': 'Airdrop Campaigns',
+    '0x197f5d9110315544d057b1a463723363769bf01a': 'Community and Ecosystem',
+    '0x49fcd47a8caf052c80ffc4db9ea24a83ecc69ce5': 'Core team',
   };
-  const foundingCommunity = "0x8386b1cb4611a136d6bec5b815aff295c4cac999";
+  const foundingCommunity = '0x8386b1cb4611a136d6bec5b815aff295c4cac999';
+  const exchangeReserves: TransferLog = {
+    in: parseEther('50000000'),
+    out: parseEther('50000000'),
+    remaining: BigInt(0),
+  };
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
-    const vestingCommunityAddresses = await getVestingCommunityAddresses();
-    const transferLogs = await getTransferLogs(
-      Object.keys(poolAddress).concat(vestingCommunityAddresses as string[])
-    );
+    try {
+      const vestingCommunityAddresses = await getVestingCommunityAddresses();
 
-    const poolData = await getPoolData(transferLogs);
-    const poolDataWithColor = poolData.map((pool) => ({
-      ...pool,
-      color:
-        pool.name === "Founding Community"
-          ? "#E210E3"
-          : pool.name === "Foundation Reservers"
-          ? "#adb4c1"
-          : pool.name === "Operation Fund"
-          ? "#1C2ED3"
-          : pool.name === "Airdrop Campaigns"
-          ? "#A68DFF"
-          : pool.name === "Community and Ecosystem"
-          ? "#7543FF"
-          : pool.name === "Core team"
-          ? "#4AC8FF"
-          : "#4646AF",
-    }));
+      const transferLogs = await getTransferLogs(
+        Object.keys(poolAddress).concat(vestingCommunityAddresses as string[])
+      );
 
-    setData(poolDataWithColor);
+      const poolData = getPoolData(transferLogs);
+      const poolDataWithColor = poolData.map(({ name, ...pool }) => ({
+        ...pool,
+        name,
+        color:
+          name === 'Founding Community'
+            ? '#E210E3'
+            : name === 'Foundation Reservers'
+            ? '#adb4c1'
+            : name === 'Operation Fund'
+            ? '#1C2ED3'
+            : name === 'Airdrop Campaigns'
+            ? '#A68DFF'
+            : name === 'Community and Ecosystem'
+            ? '#7543FF'
+            : name === 'Core team'
+            ? '#4AC8FF'
+            : '#4646AF',
+      }));
+
+      setData(poolDataWithColor);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const getVestingCommunityAddresses = async () => {
     const redeemCreatedEvent = await publicClient.getLogs({
       address: foundingCommunity,
       event: parseAbiItem(
-        "event RedeemInitialized(address redeem, address erc20, uint256 totalAmount, address[] beneficiaries, uint16[] allocations, uint64 durationSeconds, uint64 redeemRate)"
+        'event RedeemInitialized(address redeem, address erc20, uint256 totalAmount, address[] beneficiaries, uint16[] allocations, uint64 durationSeconds, uint64 redeemRate)'
       ),
       args: {},
       fromBlock: BigInt(303167703),
     });
+
     return [
       foundingCommunity,
       ...redeemCreatedEvent.map((event) => event.args.redeem),
@@ -139,9 +154,9 @@ export default function Home() {
     addresses: string[]
   ): Promise<TransferLogData> => {
     const logs = await publicClient.getLogs({
-      address: "0xb1c3960aeeaf4c255a877da04b06487bba698386",
+      address: '0xb1c3960aeeaf4c255a877da04b06487bba698386',
       event: parseAbiItem(
-        "event Transfer(address indexed from, address indexed to, uint256 value)"
+        'event Transfer(address indexed from, address indexed to, uint256 value)'
       ),
       args: {},
       fromBlock: BigInt(303167703),
@@ -183,29 +198,48 @@ export default function Home() {
     return addressesInOutLogs;
   };
 
-  const getPoolData = async (transferLogs: TransferLogData) => {
+  const getPoolData = (transferLogs: TransferLogData) => {
+    const transferLogsWithoutVestingFactory = Object.assign({}, transferLogs);
+    delete transferLogsWithoutVestingFactory[foundingCommunity];
     const totalRemaining = Object.values(transferLogs).reduce((acc, log) => {
       return acc + log.remaining;
-    }, BigInt(0));
-    const totalOut = Object.values(transferLogs).reduce((acc, log) => {
+    }, exchangeReserves.remaining);
+    const totalOut = Object.values(transferLogsWithoutVestingFactory).reduce((acc, log) => {
       return acc + log.out;
-    }, BigInt(0));
-
+    }, exchangeReserves.out);
+    const totalIn = Object.values(transferLogs).reduce((acc, log) => {
+      return acc + log.in;
+    }, exchangeReserves.in);
+    setTotalLocked(formatEther(totalRemaining));
+    setTotalUnlocked(formatEther(totalOut));
+    const totalLockedTenThousandth = Number((totalRemaining * BigInt(10000)) / totalIn);
+    setLockedPercentage(totalLockedTenThousandth/100);
+    setUnlockedPercentage((10000 - totalLockedTenThousandth)/100);
     const poolData: PoolData[] = [];
+    poolData.push({
+      name: 'Liquidity and Exchange Reserves',
+      unlocked:
+        totalOut > 0
+          ? Number((exchangeReserves.out * BigInt(10000)) / totalIn) / 100
+          : 0,
+      locked:
+        totalRemaining > 0
+          ? Number((exchangeReserves.remaining * BigInt(10000)) / totalIn) / 100
+          : 0,
+    });
 
     Object.entries(poolAddress).forEach(([address, name]) => {
       poolData.push({
         name: name,
         unlocked:
           totalOut > 0
-            ? Number((transferLogs[address].out * BigInt(10000)) / totalOut) /
+            ? Number((transferLogs[address].out * BigInt(10000)) / totalIn) /
               100
             : 0,
         locked:
           totalRemaining > 0
             ? Number(
-                (transferLogs[address].remaining * BigInt(10000)) /
-                  totalRemaining
+                (transferLogs[address].remaining * BigInt(10000)) / totalIn
               ) / 100
             : 0,
       });
@@ -224,14 +258,14 @@ export default function Home() {
     }, BigInt(0));
 
     poolData.push({
-      name: "Founding Community",
+      name: 'Founding Community',
       unlocked:
         totalOut > 0
-          ? Number((totalOutLeft * BigInt(10000)) / totalOut) / 100
+          ? Number((totalOutLeft * BigInt(10000)) / totalIn) / 100
           : 0,
       locked:
         totalRemaining > 0
-          ? Number((totalRemainingLeft * BigInt(10000)) / totalRemaining) / 100
+          ? Number((totalRemainingLeft * BigInt(10000)) / totalIn) / 100
           : 0,
     });
     return poolData;
@@ -250,10 +284,9 @@ export default function Home() {
           stakeholders, including early adopters, partners, and the Beincom
           community, ensuring steady growth and balanced token velocity.
         </p>
-
         <div className="flex items-center gap-2">
           <LockOpen className="shrink-0" />
-          <StackedBarChart />
+          <StackedBarChart totalLocked={totalLocked} totalUnlocked={totalUnlocked} lockedPercentage={lockedPercentage} unlockedPercentage={unlockedPercentage} />
           <Lock className="shrink-0" />
         </div>
         <div className="flex justify-between">

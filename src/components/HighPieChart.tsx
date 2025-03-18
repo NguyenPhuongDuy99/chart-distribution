@@ -19,10 +19,9 @@ const HighNestedPieChart = ({
     name: item.name,
     y: item.unlocked + item.locked,
     color: item.color,
-    opacity: hoveredSegment && hoveredSegment !== item.name ? 0.5 : 1, 
-    sliced: hoveredSegment === item.name, 
-     selected: hoveredSegment === item.name,
-     
+    opacity: hoveredSegment && hoveredSegment !== item.name ? 0.5 : 1,
+    sliced: hoveredSegment === item.name,
+    selected: hoveredSegment === item.name,
   }));
 
   const chartOptions: Options = {
