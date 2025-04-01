@@ -5,7 +5,7 @@ import HighPieChart from '@/components/HighPieChart';
 import TableChart from '@/components/TableChart';
 import { Lock, LockOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { createPublicClient, formatEther, http, parseAbiItem, parseEther } from 'viem';
+import { createPublicClient, erc20Abi, formatEther, http, parseAbiItem, parseEther } from 'viem';
 import { arbitrum } from 'viem/chains';
 
 const publicClient = createPublicClient({
@@ -76,9 +76,13 @@ export default function Home() {
     // },
   ]);
   const [totalLocked, setTotalLocked] = useState('0');
-  const [totalUnlocked, setTotalUnlocked] = useState('0');
+  const [totalUnlocked, setTotalUnlocked] = useState('0'); //also called circulating amount
   const [lockedPercentage, setLockedPercentage] = useState(0);
   const [unlockedPercentage, setUnlockedPercentage] = useState(0);
+
+  const [stakedAmount, setStakedAmount] = useState('0');
+
+  const bicAddress = '0xb1c3960aeeaf4c255a877da04b06487bba698386';
 
   const poolAddress = {
     '0x024bbbe12cf4fe894bfffea0647257aa1183597b': 'Strategic Partner',
@@ -95,8 +99,16 @@ export default function Home() {
     remaining: BigInt(0),
   };
 
+  const stakedPoolAddress = [
+    '0x06E852baDe8E67a86d1c26B45Bc0148D9F1E33c9',
+    '0x77ae6c78Bd2e850ca8965f9DafE2f1F7BaA735Dd',
+    '0x908c2D3f55B1703e7e2Af4b10BB6Eac7Db77e5eF',
+    '0x02ED3cb4847dbd7e0664F5AC45F0604024b8cf58'
+  ]
+
   useEffect(() => {
     fetchData();
+    fetchStakedAmount();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -134,6 +146,20 @@ export default function Home() {
     }
   };
 
+  const fetchStakedAmount = async () => {
+    const stakedAmountRequests = stakedPoolAddress.map((address) => {
+      return publicClient.readContract({
+        address: bicAddress,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`],
+      })
+    });
+    const stakedAmounts = await Promise.all(stakedAmountRequests);
+    const totalStakedAmount = stakedAmounts.reduce((acc, amount) => acc + amount, BigInt(0));
+    setStakedAmount(formatEther(totalStakedAmount));
+  }
+
   const getVestingCommunityAddresses = async () => {
     const redeemCreatedEvent = await publicClient.getLogs({
       address: foundingCommunity,
@@ -154,7 +180,7 @@ export default function Home() {
     addresses: string[]
   ): Promise<TransferLogData> => {
     const logs = await publicClient.getLogs({
-      address: '0xb1c3960aeeaf4c255a877da04b06487bba698386',
+      address: bicAddress,
       event: parseAbiItem(
         'event Transfer(address indexed from, address indexed to, uint256 value)'
       ),
