@@ -172,21 +172,45 @@ export default function Home() {
 
     return [
       foundingCommunity,
-      ...redeemCreatedEvent.map((event) => event.args.redeem),
+      ...redeemCreatedEvent.map((event) => event.args.redeem!.toLowerCase()),
     ];
   };
 
   const getTransferLogs = async (
     addresses: string[]
   ): Promise<TransferLogData> => {
-    const logs = await publicClient.getLogs({
-      address: bicAddress,
-      event: parseAbiItem(
-        'event Transfer(address indexed from, address indexed to, uint256 value)'
-      ),
-      args: {},
-      fromBlock: BigInt(303167703),
-    });
+    const startBlock = BigInt(303167703);
+    // Get the current block number to use as a reference point
+    const currentBlock = await publicClient.getBlockNumber();
+    
+    const blockRange = BigInt(2000000);
+    const totalBlocks = currentBlock - startBlock;
+    const batchCount = Math.ceil(Number(totalBlocks) / Number(blockRange));
+    
+    // Create array of batch requests
+    const logRequests = [];
+    for (let i = 0; i < batchCount; i++) {
+      const fromBlock = startBlock + (BigInt(i) * blockRange);
+      const toBlock = i === batchCount - 1 
+        ? currentBlock 
+        : fromBlock + blockRange - BigInt(1);
+      
+      logRequests.push(
+        publicClient.getLogs({
+          address: bicAddress,
+          event: parseAbiItem(
+            'event Transfer(address indexed from, address indexed to, uint256 value)'
+          ),
+          args: {},
+          fromBlock,
+          toBlock,
+        })
+      );
+    }
+    
+    // Execute all requests in parallel and combine results
+    const logsArrays = await Promise.all(logRequests);
+    const logs = logsArrays.flat();
 
     const addressesInOutLogs = Object.fromEntries(
       addresses.map((address) => [
